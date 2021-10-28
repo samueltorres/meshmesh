@@ -1,0 +1,8 @@
+clusterName: mm1
+
+gossip:
+  advertiseAddress: 172.18.255.231
+  advertisePort: 2381
+  bindAddress: 0.0.0.0
+  bindPort: 2381
+  joinServers: []

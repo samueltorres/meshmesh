@@ -1,0 +1,13 @@
+spec:
+  template:
+    spec:
+      hostAliases:
+      - ip: 172.18.255.203
+        hostnames:
+        - mm3.mesh.cilium.io
+      - ip: 172.18.255.202
+        hostnames:
+        - mm2.mesh.cilium.io
+      - ip: 172.18.255.201
+        hostnames:
+        - mm1.mesh.cilium.io
