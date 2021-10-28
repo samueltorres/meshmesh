@@ -1,8 +1,8 @@
 debug:
-  enabled: true
+  enabled: false
 nodeinit:
   enabled: true
-  restartPods: true
+  restartPods: false
 kubeProxyReplacement: partial
 hostServices:
   enabled: false

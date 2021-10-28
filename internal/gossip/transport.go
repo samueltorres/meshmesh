@@ -161,7 +161,13 @@ func (t *TCPTransport) handleConnection(conn net.Conn) {
 	closeConn := true
 	defer func() {
 		if closeConn {
-			_ = conn.Close()
+
+			t.logger.Debug("Closing TCP connection")
+			err := conn.Close()
+			if err != nil {
+				t.logger.Error("Error closing TCP connection", zap.Error(err))
+
+			}
 		}
 	}()
 

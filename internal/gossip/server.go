@@ -53,6 +53,19 @@ func (s *Server) Start(ctx context.Context) error {
 	conf.Delegate = delegate
 	conf.Events = eventDelegate
 
+	tcpTransportCfg := TCPTransportConfig{
+		BindAddrs:          []string{s.options.GossipBindAddr},
+		BindPort:           s.options.GossipPort,
+		PacketDialTimeout:  10 * time.Second,
+		PacketWriteTimeout: 10 * time.Second,
+		TransportDebug:     true,
+	}
+	tcpTransport, err := NewTCPTransport(tcpTransportCfg, s.logger)
+	if err != nil {
+		return err
+	}
+	conf.Transport = tcpTransport
+
 	// Get ClusterMeshAPIServer LoadBalancer IP
 	clusterMeshAPIServerSvc, err := s.clientSet.
 		CoreV1().

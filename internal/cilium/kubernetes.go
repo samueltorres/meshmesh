@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -38,7 +39,7 @@ func NewConfigurationUpdater(logger *zap.Logger, meshState *state.ClusterMeshSta
 
 func (c *ConfigurationUpdater) Start(ctx context.Context) error {
 	c.logger.Info("running config updater")
-	ticker := time.NewTicker(20 * time.Second)
+	ticker := time.NewTicker(10 * time.Minute)
 	for {
 		select {
 		case <-ticker.C:
@@ -109,6 +110,7 @@ func (c *ConfigurationUpdater) UpdateCiliumClusterMeshSecret() {
 				certSuffix,
 				base64.StdEncoding.EncodeToString([]byte(cluster.ClusterMeshAPIServerTLSCert))))
 	}
+	sort.Strings(secretData)
 
 	patch := []byte(`{"data":{` + strings.Join(secretData, ",") + `}}`)
 	_, err = c.kubernetesClient.
@@ -127,12 +129,13 @@ func (c *ConfigurationUpdater) UpdateCiliumDaemonSetHostAliases() {
 	for _, cluster := range pool {
 		aliases = append(aliases, `{"ip":"`+cluster.ClusterMeshAPIServerIP+`", "hostnames":["`+cluster.ClusterName+`.mesh.cilium.io"]}`)
 	}
+	sort.Strings(aliases)
 
 	patch := []byte(`{"spec":{"template":{"spec":{"hostAliases":[` + strings.Join(aliases, ",") + `]}}}}`)
 	_, err := c.kubernetesClient.
 		AppsV1().
 		DaemonSets("kube-system").
-		Patch(context.Background(), "cilium", types.StrategicMergePatchType, patch, metav1.PatchOptions{})
+		Patch(context.Background(), "cilium", types.MergePatchType, patch, metav1.PatchOptions{})
 
 	if err != nil {
 		c.logger.Error("error updating daemonset", zap.Error(err), zap.String("daemonset", "cilium"))
