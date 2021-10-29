@@ -39,7 +39,7 @@ func NewConfigurationUpdater(logger *zap.Logger, meshState *state.ClusterMeshSta
 
 func (c *ConfigurationUpdater) Start(ctx context.Context) error {
 	c.logger.Info("running config updater")
-	ticker := time.NewTicker(10 * time.Minute)
+	ticker := time.NewTicker(30 * time.Second)
 	for {
 		select {
 		case <-ticker.C:

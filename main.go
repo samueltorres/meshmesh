@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -33,6 +32,7 @@ func main() {
 	var gossipBindAddr string
 	var gossipJoinAddresses string
 
+	logLevel := zap.LevelFlag("log-level", zap.InfoLevel, "")
 	flag.BoolVar(&outOfClusterConfig, "out-of-cluster-config", false, "")
 	flag.StringVar(&kubeContext, "context", "", "")
 	flag.StringVar(&clusterName, "cluster-name", "", "")
@@ -44,6 +44,13 @@ func main() {
 	flag.StringVar(&gossipJoinAddresses, "gossip-join-servers", "", "")
 	flag.Parse()
 
+	loggerCfg := zap.NewProductionConfig()
+	loggerCfg.Level.SetLevel(*logLevel)
+	logger, err := loggerCfg.Build()
+	if err != nil {
+		panic(err.Error())
+	}
+
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -52,7 +59,6 @@ func main() {
 	}
 
 	var kubernetesConfig *rest.Config
-	var err error
 	if outOfClusterConfig {
 		var err error
 		kubernetesConfig, err = buildConfigFromFlags(kubeContext, *kubeconfig)
@@ -71,20 +77,10 @@ func main() {
 		panic(err.Error())
 	}
 
-	logger := zap.NewExample()
-	logger.Info("cfg",
-		zap.String("nodename", gossipNodeName),
-		zap.String("gossipAdvertiseAddr", gossipAdvertiseAddr),
-		zap.Int("gossipAdvertisePort", gossipAdvertisePort),
-		zap.String("gossipBindAddr", gossipBindAddr),
-		zap.Int("gossipPort", gossipPort),
-		zap.String("gossipJoinAddresses", gossipJoinAddresses),
-	)
-
-	// ClusterMesh Pool
+	// ClusterMesh State
 	state := state.NewClusterMeshState(logger)
 
-	// Cilium configuration updater
+	// Cilium config updater
 	ciliumCfgUpdater := cilium.NewConfigurationUpdater(logger, state, kubernetesClient)
 
 	// Gossip Server
@@ -120,10 +116,10 @@ func main() {
 			c := make(chan os.Signal, 1)
 			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 			sig := <-c
-			return fmt.Errorf("received signal %s", sig)
-		}, func(error) {
-			fmt.Println("canceling")
 			cancel()
+			logger.Info("received signal", zap.String("signal", sig.String()))
+			return nil
+		}, func(error) {
 		})
 	}
 

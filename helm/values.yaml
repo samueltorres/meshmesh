@@ -10,6 +10,9 @@ gossip:
   nodePort: 32222
   joinServers: []
 
+log:
+  level: info
+
 image:
   repository: meshmesh
   pullPolicy: IfNotPresent

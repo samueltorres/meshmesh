@@ -35,7 +35,7 @@ type TCPTransportConfig struct {
 	TransportDebug     bool
 }
 
-// Blamelessly grabbed from distributed systems kit from grafana
+// Copied and edited from distributed systems kit from grafana
 // https://github.com/grafana/dskit/blob/main/kv/memberlist/tcp_transport.go
 // TCPTransport is a memberlist.Transport implementation that uses TCP for both packet and stream
 // operations ("packet" and "stream" are terms used by memberlist).

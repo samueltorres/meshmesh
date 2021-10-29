@@ -52,6 +52,7 @@ func (s *Server) Start(ctx context.Context) error {
 	conf.AdvertiseAddr = s.options.GossipAdvertiseAddr
 	conf.Delegate = delegate
 	conf.Events = eventDelegate
+	conf.GossipInterval = 20 * time.Second
 
 	tcpTransportCfg := TCPTransportConfig{
 		BindAddrs:          []string{s.options.GossipBindAddr},

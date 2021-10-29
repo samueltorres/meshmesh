@@ -39,6 +39,7 @@ spec:
           - "--gossip-bind-addr={{ .Values.gossip.bindAddress }}"
           - "--gossip-port={{ .Values.gossip.bindPort }}"
           - "--gossip-join-servers={{- join "," .Values.gossip.joinServers }}"
+          - "--log-level={{ .Values.log.level }}"
           ports:
             - name: gossip
               containerPort: {{ .Values.gossip.bindPort }}
