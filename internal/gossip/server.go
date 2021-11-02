@@ -41,7 +41,6 @@ func NewServer(opts ServerOptions, logger *zap.Logger, meshState *state.ClusterM
 func (s *Server) Start(ctx context.Context) error {
 	s.logger.Info("starting mesh server")
 
-	eventDelegate := NewEventDelegate(s.logger, s.options.ClusterName, s.meshState)
 	delegate := NewDelegate(s.logger, s.meshState)
 
 	conf := memberlist.DefaultWANConfig()
@@ -51,9 +50,10 @@ func (s *Server) Start(ctx context.Context) error {
 	conf.AdvertisePort = s.options.GossipAdvertisePort
 	conf.AdvertiseAddr = s.options.GossipAdvertiseAddr
 	conf.Delegate = delegate
-	conf.Events = eventDelegate
+	conf.Events = delegate
 	conf.GossipInterval = 20 * time.Second
 
+	// Setup TCP Transport
 	tcpTransportCfg := TCPTransportConfig{
 		BindAddrs:          []string{s.options.GossipBindAddr},
 		BindPort:           s.options.GossipPort,
@@ -90,7 +90,6 @@ func (s *Server) Start(ctx context.Context) error {
 	// Get ClusterMeshAPIServer CA
 	delegate.nodeMeta.ClusterName = s.options.ClusterName
 
-	s.meshState.Lock()
 	s.meshState.AddOrUpdate(&state.ClusterMeshCluster{
 		ClusterName:                 s.options.ClusterName,
 		ClusterMeshAPIServerIP:      clusterMeshAPIServerSvc.Spec.LoadBalancerIP,
@@ -98,7 +97,6 @@ func (s *Server) Start(ctx context.Context) error {
 		ClusterMeshAPIServerTLSCert: string(clusterMeshAPIServerClientCertSecret.Data["tls.crt"]),
 		ClusterMeshAPIServerTLSKey:  string(clusterMeshAPIServerClientCertSecret.Data["tls.key"]),
 	})
-	s.meshState.Unlock()
 
 	ml, err := memberlist.Create(conf)
 	if err != nil {

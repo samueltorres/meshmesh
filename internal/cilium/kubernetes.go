@@ -39,10 +39,15 @@ func NewConfigurationUpdater(logger *zap.Logger, meshState *state.ClusterMeshSta
 
 func (c *ConfigurationUpdater) Start(ctx context.Context) error {
 	c.logger.Info("running config updater")
+
+	updateCh := c.meshState.UpdateChannel()
+
 	ticker := time.NewTicker(30 * time.Second)
 	for {
 		select {
 		case <-ticker.C:
+			c.Update()
+		case <-updateCh:
 			c.Update()
 		case <-ctx.Done():
 			c.logger.Info("stopping config updater")
